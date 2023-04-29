@@ -1,7 +1,6 @@
 package com.marful.exampleparsedrive;
 
 import android.Manifest;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -11,16 +10,15 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.marful.exampleparsedrive.AsyncTasks.MyAsyncTask;
-import com.marful.exampleparsedrive.Connection.ConnectionClass;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
 import com.marful.exampleparsedrive.Entities.ChargingPoint;
 import com.marful.exampleparsedrive.Maps.MapConfig;
 
@@ -31,7 +29,6 @@ import org.osmdroid.views.overlay.Marker;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
@@ -41,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     static LocationManager locationManager;
     static Location myLocation, myDestiny;
     static List<ChargingPoint> puntsCarregaSorted;
-    Marker destinyMarker,startMarker;
+    Marker destinyMarker, startMarker;
     private MapConfig myMapConfig;
 
 
@@ -63,9 +60,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         myMapConfig = new MapConfig(getApplicationContext(), map);
 
 
-        if(isOnline()) {
+        if (isOnline()) {
             getLocation();
-        }else{
+        } else {
             Toast.makeText(MainActivity.this, "Please Enable GPS and Internet", Toast.LENGTH_LONG).show();
             finishAndRemoveTask();
         }
@@ -73,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         myMapConfig.loadMaps();
 
-        myMapConfig.centeringMap(15,myLocation);
+        myMapConfig.centeringMap(15, myLocation);
 
         puntsCarregaSorted = calculatingDistances(chargingPoints);
 
@@ -81,21 +78,16 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         myMapConfig.addingOverlay(puntsCarregaSorted);
 
-        Log.i("myLocation",""+myLocation); //debug purposes
+        Log.i("myLocation", "" + myLocation); //debug purposes
         startMarker = myMapConfig.addingStartMarker(myLocation);
 
-        Log.i("myDestiny",""+myDestiny); //debug purposes
+        Log.i("myDestiny", "" + myDestiny); //debug purposes
         destinyMarker = myMapConfig.addingDestinyMarker(myDestiny);
 
-        myMapConfig.addingRouteLine(myLocation,myDestiny);
-
+        myMapConfig.addingRouteLine(myLocation, myDestiny);
 
 
     }//closes main
-
-
-
-
 
 
     public void getLocation() {
@@ -157,11 +149,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
 
-
     private static List<ChargingPoint> parsePuntsCarrega(JSONArray jsonArray) throws JSONException {
         chargingPoints = new ArrayList<>();
 
-        for (int i =0; i < jsonArray.length(); i++){
+        for (int i = 0; i < jsonArray.length(); i++) {
 
             String id = jsonArray.getJSONObject(i).getString("id");
             String municipi = jsonArray.getJSONObject(i).getString("municipi");
@@ -169,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             String latitud = jsonArray.getJSONObject(i).getString("latitud");
             String longitud = jsonArray.getJSONObject(i).getString("longitud");
 
-            ChargingPoint pc = new ChargingPoint(Double.parseDouble(id),municipi,provincia,Double.parseDouble(latitud),Double.parseDouble(longitud),0f);
+            ChargingPoint pc = new ChargingPoint(Double.parseDouble(id), municipi, provincia, Double.parseDouble(latitud), Double.parseDouble(longitud), 0f);
             chargingPoints.add(pc);
         }
 
@@ -177,27 +168,27 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private List<ChargingPoint> calculatingDistances(List<ChargingPoint> chargingPoints){
+    private List<ChargingPoint> calculatingDistances(List<ChargingPoint> chargingPoints) {
         //TODO calculate by road distance not by straight distance
 
         Location l = new Location("dummy");
 
-        chargingPoints.stream().forEach(p->{
+        chargingPoints.stream().forEach(p -> {
             l.setLatitude(p.getLatitude());
             l.setLongitude(p.getLongitude());
-            Float distanceToUser = myLocation.distanceTo(l)/1000;
+            Float distanceToUser = myLocation.distanceTo(l) / 1000;
             p.setDistance(distanceToUser);
         });
 
         puntsCarregaSorted = chargingPoints.stream()
-                .sorted((o1, o2) -> Float.compare (o1.getDistance(),o2.getDistance()))
+                .sorted((o1, o2) -> Float.compare(o1.getDistance(), o2.getDistance()))
                 .collect(Collectors.toList());
 
 
         return puntsCarregaSorted;
     }
 
-    private Location gettingDestiny (List<ChargingPoint> puntsCarregaSorted){
+    private Location gettingDestiny(List<ChargingPoint> puntsCarregaSorted) {
         myDestiny = new Location("myDestiny");
         myDestiny.setLatitude(puntsCarregaSorted.get(0).getLatitude());
         myDestiny.setLongitude(puntsCarregaSorted.get(0).getLongitude());
@@ -212,6 +203,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
 
+    @RequiresApi(api = Build.VERSION_CODES.P)
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (locationManager.isLocationEnabled()){locationManager.removeUpdates(this);}
 
-
+    }
 }//closes class

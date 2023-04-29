@@ -1,4 +1,3 @@
 <resources>
-    <string name="app_name">Punts Càrrega EV</string>
-    <string name="hola">hola</string>
+    <string name="app_name">EV Charging Points</string>
 </resources>
