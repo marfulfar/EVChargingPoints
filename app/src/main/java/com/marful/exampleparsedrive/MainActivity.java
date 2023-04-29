@@ -3,6 +3,7 @@ package com.marful.exampleparsedrive;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -20,7 +21,7 @@ import android.widget.Toast;
 
 import com.marful.exampleparsedrive.AsyncTasks.MyAsyncTask;
 import com.marful.exampleparsedrive.Connection.ConnectionClass;
-import com.marful.exampleparsedrive.Entities.PuntCarrega;
+import com.marful.exampleparsedrive.Entities.ChargingPoint;
 import com.marful.exampleparsedrive.Maps.MapConfig;
 
 import org.json.JSONArray;
@@ -36,12 +37,10 @@ import java.util.stream.Collectors;
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
     MapView map;
-    static List<PuntCarrega> puntsCarrega;
-    ConnectionClass myConnection;
+    static List<ChargingPoint> chargingPoints;
     static LocationManager locationManager;
     static Location myLocation, myDestiny;
-    static JSONArray jsonArray;
-    static List<PuntCarrega> puntsCarregaSorted;
+    static List<ChargingPoint> puntsCarregaSorted;
     Marker destinyMarker,startMarker;
     private MapConfig myMapConfig;
 
@@ -53,12 +52,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        map = (MapView) findViewById(R.id.map);
-
-        myMapConfig = new MapConfig(getApplicationContext(), map);
-
         //to overrride the internet on main thread
         StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().permitNetwork().build());
+
+        map = (MapView) findViewById(R.id.map);
+
+        Intent i = getIntent();
+        chargingPoints = (List<ChargingPoint>) i.getSerializableExtra("chargingPoints");
+
+        myMapConfig = new MapConfig(getApplicationContext(), map);
 
 
         if(isOnline()) {
@@ -68,29 +70,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             finishAndRemoveTask();
         }
 
-        while(myLocation == null){
-
-            new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("Loading...")
-                    .setMessage("Loading location")
-                    .show();
-
-        }
 
         myMapConfig.loadMaps();
 
         myMapConfig.centeringMap(15,myLocation);
 
-        try {
-            puntsCarrega = (List<PuntCarrega>) new MyAsyncTask().execute().get();
+        puntsCarregaSorted = calculatingDistances(chargingPoints);
 
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-        puntsCarregaSorted = calculatingDistances(puntsCarrega);
         myDestiny = gettingDestiny(puntsCarregaSorted);
 
         myMapConfig.addingOverlay(puntsCarregaSorted);
@@ -136,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public void onLocationChanged(Location location) {
         myLocation = location;
 
-        puntsCarregaSorted = calculatingDistances(puntsCarrega);
+        puntsCarregaSorted = calculatingDistances(chargingPoints);
 
         double zoom = map.getZoomLevelDouble();
         myMapConfig.centeringMap(zoom, myLocation);
@@ -172,8 +158,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
 
 
-    private static List<PuntCarrega> parsePuntsCarrega(JSONArray jsonArray) throws JSONException {
-        puntsCarrega = new ArrayList<>();
+    private static List<ChargingPoint> parsePuntsCarrega(JSONArray jsonArray) throws JSONException {
+        chargingPoints = new ArrayList<>();
 
         for (int i =0; i < jsonArray.length(); i++){
 
@@ -183,27 +169,27 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             String latitud = jsonArray.getJSONObject(i).getString("latitud");
             String longitud = jsonArray.getJSONObject(i).getString("longitud");
 
-            PuntCarrega pc = new PuntCarrega(Double.parseDouble(id),municipi,provincia,Double.parseDouble(latitud),Double.parseDouble(longitud),0f);
-            puntsCarrega.add(pc);
+            ChargingPoint pc = new ChargingPoint(Double.parseDouble(id),municipi,provincia,Double.parseDouble(latitud),Double.parseDouble(longitud),0f);
+            chargingPoints.add(pc);
         }
 
-        return puntsCarrega;
+        return chargingPoints;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private List<PuntCarrega> calculatingDistances(List<PuntCarrega> puntsCarrega){
+    private List<ChargingPoint> calculatingDistances(List<ChargingPoint> chargingPoints){
         //TODO calculate by road distance not by straight distance
 
         Location l = new Location("dummy");
 
-        puntsCarrega.stream().forEach(p->{
+        chargingPoints.stream().forEach(p->{
             l.setLatitude(p.getLatitude());
             l.setLongitude(p.getLongitude());
             Float distanceToUser = myLocation.distanceTo(l)/1000;
             p.setDistance(distanceToUser);
         });
 
-        puntsCarregaSorted = puntsCarrega.stream()
+        puntsCarregaSorted = chargingPoints.stream()
                 .sorted((o1, o2) -> Float.compare (o1.getDistance(),o2.getDistance()))
                 .collect(Collectors.toList());
 
@@ -211,7 +197,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         return puntsCarregaSorted;
     }
 
-    private Location gettingDestiny (List<PuntCarrega> puntsCarregaSorted){
+    private Location gettingDestiny (List<ChargingPoint> puntsCarregaSorted){
         myDestiny = new Location("myDestiny");
         myDestiny.setLatitude(puntsCarregaSorted.get(0).getLatitude());
         myDestiny.setLongitude(puntsCarregaSorted.get(0).getLongitude());

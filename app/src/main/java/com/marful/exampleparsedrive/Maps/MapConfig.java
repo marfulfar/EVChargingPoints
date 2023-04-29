@@ -8,7 +8,7 @@ import android.preference.PreferenceManager;
 import androidx.annotation.RequiresApi;
 
 import com.marful.exampleparsedrive.BuildConfig;
-import com.marful.exampleparsedrive.Entities.PuntCarrega;
+import com.marful.exampleparsedrive.Entities.ChargingPoint;
 import com.marful.exampleparsedrive.R;
 
 import org.osmdroid.api.IMapController;
@@ -75,7 +75,7 @@ public class MapConfig {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public void addingOverlay(List<PuntCarrega> puntsCarregaSorted){
+    public void addingOverlay(List<ChargingPoint> puntsCarregaSorted){
         //TODO option to filter markers by "municipi", adding filter to the lambda
         /*
         List<PuntCarrega> filteredMunicipi = puntsCarregaSorted.stream()

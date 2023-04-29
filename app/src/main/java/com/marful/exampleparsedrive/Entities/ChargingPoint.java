@@ -1,6 +1,8 @@
 package com.marful.exampleparsedrive.Entities;
 
-public class PuntCarrega {
+import java.io.Serializable;
+
+public class ChargingPoint implements Serializable {
 
     private Double id;
     private String municipi;
@@ -9,7 +11,7 @@ public class PuntCarrega {
     private Double longitude;
     private Float distance;
 
-    public PuntCarrega(Double id, String municipi, String provincia, Double latitude, Double longitude, Float distance) {
+    public ChargingPoint(Double id, String municipi, String provincia, Double latitude, Double longitude, Float distance) {
         this.id = id;
         this.municipi = municipi;
         this.provincia = provincia;
