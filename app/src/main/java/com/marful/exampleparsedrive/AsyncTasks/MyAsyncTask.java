@@ -15,7 +15,7 @@ import java.util.List;
 
 public class MyAsyncTask extends AsyncTask {
     @Override
-    protected JSONArray doInBackground(Object[] objects) {
+    protected List<PuntCarrega>  doInBackground(Object[] objects) {
         ConnectionClass myConnection = new ConnectionClass();
         List<PuntCarrega> puntsCarrega;
         JSONArray jsonArray;
@@ -23,13 +23,17 @@ public class MyAsyncTask extends AsyncTask {
         try {
            jsonArray = myConnection.getJsonObject(myConnection.getJsonString());
 
+           puntsCarrega = parsePuntsCarrega(jsonArray);
+
         } catch (JSONException e) {
             throw new RuntimeException(e);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
 
-        return jsonArray;
+
+
+        return puntsCarrega;
     }
 
 

@@ -7,7 +7,6 @@ import android.preference.PreferenceManager;
 
 import androidx.annotation.RequiresApi;
 
-import com.marful.exampleparsedrive.AsyncTasks.AsyncTaskRoute;
 import com.marful.exampleparsedrive.BuildConfig;
 import com.marful.exampleparsedrive.Entities.PuntCarrega;
 import com.marful.exampleparsedrive.R;
@@ -25,8 +24,6 @@ import org.osmdroid.views.overlay.Polyline;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 public class MapConfig {
 
@@ -47,7 +44,7 @@ public class MapConfig {
         map.setMultiTouchControls(true);
     }
 
-    public void centeringMap(int zoom, Location myLocation){
+    public void centeringMap(double zoom, Location myLocation){
         IMapController mapController = map.getController();
         mapController.setZoom(zoom);
         GeoPoint startPoint = new GeoPoint(myLocation.getLatitude(),myLocation.getLongitude());
@@ -55,7 +52,7 @@ public class MapConfig {
 
     }
 
-    public void addingStartMarker(Location myLocation){
+    public Marker addingStartMarker(Location myLocation){
         startMarker = new Marker(map);
         startMarker.setPosition(new GeoPoint(myLocation.getLatitude(),myLocation.getLongitude()));
         startMarker.setIcon(context.getDrawable(R.drawable.baseline_circle_24));
@@ -63,42 +60,46 @@ public class MapConfig {
         startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
         map.getOverlays().add(startMarker);
 
+        return startMarker;
     }
 
-    public void addingDestinyMarker(Location myDestiny){
+    public Marker addingDestinyMarker(Location myDestiny){
         destinyMarker = new Marker(map);
         destinyMarker.setPosition(new GeoPoint(myDestiny.getLatitude(),myDestiny.getLongitude()));
         destinyMarker.setIcon(context.getDrawable(R.drawable.baseline_location_on_48));
         destinyMarker.setTitle("Destiny point");
         destinyMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
         map.getOverlays().add(destinyMarker);
+
+        return destinyMarker;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void addingOverlay(List<PuntCarrega> puntsCarregaSorted){
-
+        //TODO option to filter markers by "municipi", adding filter to the lambda
+        /*
         List<PuntCarrega> filteredMunicipi = puntsCarregaSorted.stream()
                 .filter(m -> m.getMunicipi().equalsIgnoreCase("barcelona"))
                 .collect(Collectors.toList());
+        */
 
-        for (PuntCarrega punt:filteredMunicipi) {
+        puntsCarregaSorted.stream().forEach(p->{
             Marker mark = new Marker(map);
-            mark.setPosition(new GeoPoint(punt.getLatitude(), punt.getLongitude()));
             mark.setIcon(context.getDrawable(R.drawable.location_green_48));
             mark.setTitle("EV charging point");
             mark.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+            mark.setPosition(new GeoPoint(p.getLatitude(), p.getLongitude()));
             map.getOverlays().add(mark);
-        }
+        });
+
 
     }
 
 
-    public void addingRouteLine(Location myLocation, Location myDestiny) throws ExecutionException, InterruptedException {
-        //AsyncTaskRoute atr = new AsyncTaskRoute();
-        //Polyline roadOverlay = (Polyline) atr.execute(myLocation,myDestiny,context).get();
-
-        RoadManager roadManager = new OSRMRoadManager(context,"MyUserAgent");
+    public void addingRouteLine(Location myLocation, Location myDestiny) {
         ArrayList<GeoPoint> wayPoints = new ArrayList<>();
+        RoadManager roadManager = new OSRMRoadManager(context,"MyUserAgent");
+
         wayPoints.add(new GeoPoint(myLocation));
         wayPoints.add(new GeoPoint(myDestiny));
         Road road = roadManager.getRoad(wayPoints);

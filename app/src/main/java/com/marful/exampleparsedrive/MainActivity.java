@@ -15,14 +15,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.marful.exampleparsedrive.AsyncTasks.AsyncTaskRoute;
 import com.marful.exampleparsedrive.AsyncTasks.MyAsyncTask;
 import com.marful.exampleparsedrive.Connection.ConnectionClass;
 import com.marful.exampleparsedrive.Entities.PuntCarrega;
@@ -30,20 +25,11 @@ import com.marful.exampleparsedrive.Maps.MapConfig;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.osmdroid.api.IMapController;
-import org.osmdroid.bonuspack.routing.OSRMRoadManager;
-import org.osmdroid.bonuspack.routing.Road;
-import org.osmdroid.bonuspack.routing.RoadManager;
-import org.osmdroid.config.Configuration;
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
-import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
-import org.osmdroid.views.overlay.Polyline;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -70,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         map = (MapView) findViewById(R.id.map);
 
         myMapConfig = new MapConfig(getApplicationContext(), map);
+
         //to overrride the internet on main thread
         StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().permitNetwork().build());
 
@@ -90,46 +77,32 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         }
 
-        //mapCongig
         myMapConfig.loadMaps();
-        //mapCongig
+
         myMapConfig.centeringMap(15,myLocation);
 
         try {
-            JSONArray jsonArray = (JSONArray) new MyAsyncTask().execute().get();
-            puntsCarrega = parsePuntsCarrega(jsonArray);
-            puntsCarregaSorted = calculatingDistances(puntsCarrega);
-            myDestiny = new Location("myDestiny");
-            myDestiny.setLatitude(puntsCarregaSorted.get(0).getLatitude());
-            myDestiny.setLongitude(puntsCarregaSorted.get(0).getLongitude());
+            puntsCarrega = (List<PuntCarrega>) new MyAsyncTask().execute().get();
 
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
         }
 
-        //mapCongig
+        puntsCarregaSorted = calculatingDistances(puntsCarrega);
+        myDestiny = gettingDestiny(puntsCarregaSorted);
+
         myMapConfig.addingOverlay(puntsCarregaSorted);
 
-        //mapCongig
-        Log.i("myLocation",""+myLocation);
-        myMapConfig.addingStartMarker(myLocation);
+        Log.i("myLocation",""+myLocation); //debug purposes
+        startMarker = myMapConfig.addingStartMarker(myLocation);
 
-        //mapCongig
-        Log.i("myDestiny",""+myDestiny);
-        myMapConfig.addingDestinyMarker(myDestiny);
+        Log.i("myDestiny",""+myDestiny); //debug purposes
+        destinyMarker = myMapConfig.addingDestinyMarker(myDestiny);
 
-        try {
-            //mapCongig
-            myMapConfig.addingRouteLine(myLocation,myDestiny);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        myMapConfig.addingRouteLine(myLocation,myDestiny);
+
 
 
     }//closes main
@@ -161,36 +134,23 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onLocationChanged(Location location) {
-        this.myLocation = location;
+        myLocation = location;
 
         puntsCarregaSorted = calculatingDistances(puntsCarrega);
 
-        //mapCongig
-        int zoom = map.getZoomLevel();
+        double zoom = map.getZoomLevelDouble();
         myMapConfig.centeringMap(zoom, myLocation);
 
-        myDestiny = new Location("myDestiny");
-        myDestiny.setLatitude(puntsCarregaSorted.get(0).getLatitude());
-        myDestiny.setLongitude(puntsCarregaSorted.get(0).getLongitude());
+        myDestiny = gettingDestiny(puntsCarregaSorted);
 
         map.getOverlays().remove(destinyMarker);
         map.getOverlays().remove(startMarker);
 
-        //mapCongig
-        myMapConfig.addingStartMarker(myLocation);
-        myMapConfig.addingDestinyMarker(myDestiny);
-
+        startMarker = myMapConfig.addingStartMarker(myLocation);
+        destinyMarker = myMapConfig.addingDestinyMarker(myDestiny);
 
         map.getOverlays().remove(1);
-        try {
-            //mapCongig
-            myMapConfig.addingRouteLine(myLocation, myDestiny);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
+        myMapConfig.addingRouteLine(myLocation, myDestiny);
 
 
     }
@@ -232,15 +192,16 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private List<PuntCarrega> calculatingDistances(List<PuntCarrega> puntsCarrega){
+        //TODO calculate by road distance not by straight distance
 
         Location l = new Location("dummy");
 
-        for (int i =0; i< puntsCarrega.size(); i++){
-            l.setLatitude(puntsCarrega.get(i).getLatitude());
-            l.setLongitude(puntsCarrega.get(i).getLongitude());
+        puntsCarrega.stream().forEach(p->{
+            l.setLatitude(p.getLatitude());
+            l.setLongitude(p.getLongitude());
             Float distanceToUser = myLocation.distanceTo(l)/1000;
-            puntsCarrega.get(i).setDistance(distanceToUser);
-        }
+            p.setDistance(distanceToUser);
+        });
 
         puntsCarregaSorted = puntsCarrega.stream()
                 .sorted((o1, o2) -> Float.compare (o1.getDistance(),o2.getDistance()))
@@ -250,6 +211,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         return puntsCarregaSorted;
     }
 
+    private Location gettingDestiny (List<PuntCarrega> puntsCarregaSorted){
+        myDestiny = new Location("myDestiny");
+        myDestiny.setLatitude(puntsCarregaSorted.get(0).getLatitude());
+        myDestiny.setLongitude(puntsCarregaSorted.get(0).getLongitude());
+        return myDestiny;
+    }
 
     public boolean isOnline() {
         ConnectivityManager cm =
