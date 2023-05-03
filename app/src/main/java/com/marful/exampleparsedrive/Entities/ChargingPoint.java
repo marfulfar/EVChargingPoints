@@ -1,18 +1,23 @@
 package com.marful.exampleparsedrive.Entities;
 
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
 import java.io.Serializable;
 
+
+@Entity
 public class ChargingPoint implements Serializable {
 
-    private Double id;
+    @PrimaryKey(autoGenerate = true)
+    private Integer id;
     private String municipi;
     private String provincia;
     private Double latitude;
     private Double longitude;
     private Float distance;
 
-    public ChargingPoint(Double id, String municipi, String provincia, Double latitude, Double longitude, Float distance) {
-        this.id = id;
+    public ChargingPoint(String municipi, String provincia, Double latitude, Double longitude, Float distance) {
         this.municipi = municipi;
         this.provincia = provincia;
         this.latitude = latitude;
@@ -20,11 +25,11 @@ public class ChargingPoint implements Serializable {
         this.distance = distance;
     }
 
-    public Double getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(Double id) {
+    public void setId(int id) {
         this.id = id;
     }
 

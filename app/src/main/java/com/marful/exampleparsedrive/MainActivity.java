@@ -149,24 +149,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
 
-    private static List<ChargingPoint> parsePuntsCarrega(JSONArray jsonArray) throws JSONException {
-        chargingPoints = new ArrayList<>();
-
-        for (int i = 0; i < jsonArray.length(); i++) {
-
-            String id = jsonArray.getJSONObject(i).getString("id");
-            String municipi = jsonArray.getJSONObject(i).getString("municipi");
-            String provincia = jsonArray.getJSONObject(i).getString("provincia");
-            String latitud = jsonArray.getJSONObject(i).getString("latitud");
-            String longitud = jsonArray.getJSONObject(i).getString("longitud");
-
-            ChargingPoint pc = new ChargingPoint(Double.parseDouble(id), municipi, provincia, Double.parseDouble(latitud), Double.parseDouble(longitud), 0f);
-            chargingPoints.add(pc);
-        }
-
-        return chargingPoints;
-    }
-
     @RequiresApi(api = Build.VERSION_CODES.N)
     private List<ChargingPoint> calculatingDistances(List<ChargingPoint> chargingPoints) {
         //TODO calculate by road distance not by straight distance

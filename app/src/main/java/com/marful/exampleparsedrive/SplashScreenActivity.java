@@ -6,11 +6,14 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.StrictMode;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.room.Room;
 
 import com.marful.exampleparsedrive.AsyncTasks.MyAsyncTask;
+import com.marful.exampleparsedrive.DBConfig.RoomDB;
 import com.marful.exampleparsedrive.Entities.ChargingPoint;
 
 import java.io.Serializable;
@@ -31,10 +34,14 @@ public class SplashScreenActivity extends AppCompatActivity {
             finishAndRemoveTask();
         }
 
+        RoomDB myDB = Room.databaseBuilder(this,RoomDB.class,"charging points DB").allowMainThreadQueries().build();
+
+
         Runnable r = () -> {
 
             try {
                 chargingPoints = (List<ChargingPoint>) new MyAsyncTask().execute().get();
+                //myDB.ChargingPointsDAO().insert(chargingPoints);
 
             } catch (ExecutionException | InterruptedException e) {
                 throw new RuntimeException(e);

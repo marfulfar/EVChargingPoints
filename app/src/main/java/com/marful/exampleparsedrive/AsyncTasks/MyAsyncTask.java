@@ -37,13 +37,13 @@ public class MyAsyncTask extends AsyncTask {
 
         for (int i =0; i < jsonArray.length(); i++){
 
-            String id = jsonArray.getJSONObject(i).getString("id");
+            //String id = jsonArray.getJSONObject(i).getString("id");
             String municipi = jsonArray.getJSONObject(i).getString("municipi");
             String provincia = jsonArray.getJSONObject(i).getString("provincia");
             String latitude = jsonArray.getJSONObject(i).getString("latitud");
             String longitude = jsonArray.getJSONObject(i).getString("longitud");
 
-            ChargingPoint cp = new ChargingPoint(Double.parseDouble(id),municipi,provincia,Double.parseDouble(latitude),Double.parseDouble(longitude),0f);
+            ChargingPoint cp = new ChargingPoint(municipi,provincia,Double.parseDouble(latitude),Double.parseDouble(longitude),0f);
             chargingPoints.add(cp);
         }
 
