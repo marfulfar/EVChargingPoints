@@ -1,16 +1,23 @@
 package com.marful.exampleparsedrive.Entities;
 
-public class PuntCarrega {
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
-    private Double id;
+import java.io.Serializable;
+
+
+@Entity
+public class ChargingPoint implements Serializable {
+
+    @PrimaryKey(autoGenerate = true)
+    private Integer id;
     private String municipi;
     private String provincia;
     private Double latitude;
     private Double longitude;
     private Float distance;
 
-    public PuntCarrega(Double id, String municipi, String provincia, Double latitude, Double longitude, Float distance) {
-        this.id = id;
+    public ChargingPoint(String municipi, String provincia, Double latitude, Double longitude, Float distance) {
         this.municipi = municipi;
         this.provincia = provincia;
         this.latitude = latitude;
@@ -18,11 +25,11 @@ public class PuntCarrega {
         this.distance = distance;
     }
 
-    public Double getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(Double id) {
+    public void setId(int id) {
         this.id = id;
     }
 

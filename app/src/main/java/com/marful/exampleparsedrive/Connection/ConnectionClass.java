@@ -13,7 +13,7 @@ import java.net.URL;
 
 public class ConnectionClass {
 
-    final static String ESTACIONS_CARREGA = "https://analisi.transparenciacatalunya.cat/resource/tb2m-m33b.json";
+    final static String CHARGING_STATIONS = "https://analisi.transparenciacatalunya.cat/resource/tb2m-m33b.json";
     static String jsonString;
     static HttpURLConnection connection = null;
     static BufferedReader reader = null;
@@ -26,10 +26,10 @@ public class ConnectionClass {
 
     }
 
-    public String getJsonString() throws MalformedURLException {
+    public JSONArray getJsonArray() throws MalformedURLException, JSONException {
 
         try {
-            url = new URL(ESTACIONS_CARREGA);
+            url = new URL(CHARGING_STATIONS);
             connection = (HttpURLConnection) url.openConnection();
             connection.connect();
             InputStream stream = connection.getInputStream();
@@ -61,13 +61,9 @@ public class ConnectionClass {
             }
         }
 
-    return jsonString;
 
-    }
+    return jsonArray = new JSONArray(jsonString);
 
-    public JSONArray getJsonObject(String jsonString) throws JSONException {
-
-        return jsonArray = new JSONArray(jsonString);
     }
 
     }//closes class
